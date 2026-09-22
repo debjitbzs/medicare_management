@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediCare Pro — Pharmacy Management</title>
+  <meta name="description" content="Complete pharmacy management system with inventory, billing, doctor appointments, and patient records." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════════════════════════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-bg">
+    <div class="login-orb login-orb-1"></div>
+    <div class="login-orb login-orb-2"></div>
+    <div class="login-orb login-orb-3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon"><i data-lucide="cross" class="logo-cross"></i></div>
+      <div class="logo-text">
+        <h1>MediCare Pro</h1>
+        <p>Pharmacy Management System</p>
+      </div>
+    </div>
+    <form id="login-form" class="login-form">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <div class="input-icon-wrap">
+          <i data-lucide="user" class="input-icon"></i>
+          <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <div class="input-icon-wrap">
+          <i data-lucide="lock" class="input-icon"></i>
+          <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" required />
+          <button type="button" class="toggle-pw" id="toggle-pw"><i data-lucide="eye" id="eye-icon"></i></button>
+        </div>
+      </div>
+      <div id="login-error" class="alert-error hidden"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+        <span id="login-btn-text">Sign In</span>
+        <div id="login-spinner" class="btn-spinner hidden"></div>
+      </button>
+    </form>
+    <p class="login-hint">Default: admin / admin123</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════════════════ -->
+<div id="app" class="app hidden">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon-sm"><i data-lucide="cross"></i></div>
+        <span class="sidebar-brand">MediCare Pro</span>
+      </div>
+      <button id="sidebar-close" class="sidebar-close-btn"><i data-lucide="x"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#dashboard" class="nav-item active" data-page="dashboard">
+        <i data-lucide="layout-dashboard"></i><span>Dashboard</span>
+      </a>
+      <div class="nav-section-label">Inventory</div>
+      <a href="#medicines" class="nav-item" data-page="medicines">
+        <i data-lucide="pill"></i><span>Medicines</span>
+      </a>
+      <a href="#stock" class="nav-item" data-page="stock">
+        <i data-lucide="package"></i><span>Stock</span>
+      </a>
+      <div class="nav-section-label">Sales</div>
+      <a href="#billing" class="nav-item" data-page="billing">
+        <i data-lucide="shopping-cart"></i><span>Billing / POS</span>
+      </a>
+      <a href="#bills" class="nav-item" data-page="bills">
+        <i data-lucide="receipt"></i><span>Bill History</span>
+      </a>
+      <div class="nav-section-label">Clinic</div>
+      <a href="#doctors" class="nav-item" data-page="doctors">
+        <i data-lucide="stethoscope"></i><span>Doctors</span>
+      </a>
+      <a href="#patients" class="nav-item" data-page="patients">
+        <i data-lucide="users"></i><span>Patients</span>
+      </a>
+      <a href="#appointments" class="nav-item" data-page="appointments">
+        <i data-lucide="calendar-check"></i><span>Appointments</span>
+      </a>
+      <div class="nav-section-label">Management</div>
+      <a href="#reports" class="nav-item" data-page="reports">
+        <i data-lucide="bar-chart-2"></i><span>Reports</span>
+      </a>
+      <a href="#users" class="nav-item" data-page="users">
+        <i data-lucide="user-plus"></i><span>Users & Staff</span>
+      </a>
+      <a href="#settings" class="nav-item" data-page="settings">
+        <i data-lucide="settings"></i><span>Shop Settings</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar-text">A</div>
+        <div class="user-details">
+          <span id="sidebar-username">Admin</span>
+          <span id="sidebar-role" class="user-role-badge">Admin</span>
+        </div>
+        <button id="logout-btn" class="logout-btn" title="Logout"><i data-lucide="log-out"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile sidebar -->
+  <div id="sidebar-overlay" class="sidebar-overlay hidden"></div>
+
+  <!-- Main content area -->
+  <div class="main-wrapper">
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="menu-toggle" class="menu-toggle"><i data-lucide="menu"></i></button>
+        <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-btn" id="notif-btn" title="Notifications">
+          <i data-lucide="bell"></i>
+          <span class="notif-badge hidden" id="notif-badge">0</span>
+        </button>
+        <div class="topbar-clock" id="topbar-clock"></div>
+      </div>
+    </header>
+
+    <!-- Notification Panel -->
+    <div id="notif-panel" class="notif-panel hidden">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <button id="notif-close"><i data-lucide="x"></i></button>
+      </div>
+      <div id="notif-list" class="notif-list">
+        <div class="notif-empty">No notifications</div>
+      </div>
+    </div>
+
+    <!-- Page container -->
+    <main id="page-container" class="page-container">
+      <!-- Pages rendered here by JS -->
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     GLOBAL MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay hidden">
+  <div id="modal-box" class="modal-box">
+    <div class="modal-header">
+      <h3 id="modal-title">Modal</h3>
+      <button id="modal-close"><i data-lucide="x"></i></button>
+    </div>
+    <div id="modal-body" class="modal-body"></div>
+    <div id="modal-footer" class="modal-footer hidden"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Scripts -->
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/dashboard.js"></script>
+<script src="assets/js/medicines.js"></script>
+<script src="assets/js/stock.js"></script>
+<script src="assets/js/sales.js"></script>
+<script src="assets/js/doctors.js"></script>
+<script src="assets/js/patients.js"></script>
+<script src="assets/js/appointments.js"></script>
+<script src="assets/js/reports.js"></script>
+<script src="assets/js/settings.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

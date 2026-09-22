@@ -1,0 +1,31 @@
+# Virtual environments
+.venv/
+.mediEnv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+
+# Uploads & temporary reports
+backend/uploads/
+scratch/
+.system_generated/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
