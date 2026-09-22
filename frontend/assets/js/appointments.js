@@ -225,31 +225,16 @@ async function submitAppointment() {
     if (document.getElementById('appt-date-filter')) document.getElementById('appt-date-filter').value = apptDateFilter;
     loadAppointments();
 
-    // Show WhatsApp / SMS notification option
+    // Background SMS notification
     const patientObj = (_modalPatients || []).find(p => p.id === data.patient_id);
     const doctorObj  = (_modalDoctors || []).find(d => d.id === data.doctor_id);
     const rawPhone   = appt.patient_phone || patientObj?.phone || '';
     const cleanPhone = formatPhoneForWa(rawPhone);
 
     if (cleanPhone) {
-      const storeName = window._storeSettings?.store_name || 'Medify Pharmacy';
       const apptDate  = data.appointment_date || appt.appointment_date || '';
       const apptTime  = data.appointment_time || appt.appointment_time || '';
       const docName   = (doctorObj ? `Dr. ${doctorObj.name}` : '') || appt.doctor_name || 'Doctor';
-      const waMsg = encodeURIComponent(
-        `*${storeName}*\n` +
-        `🏥 *Appointment Confirmation*\n\n` +
-        `🎫 *Token Number:* #${appt.token_no}\n` +
-        `👨‍⚕️ *Doctor:* ${docName}\n` +
-        `📅 *Date:* ${apptDate}\n` +
-        `⏰ *Time:* ${apptTime}\n\n` +
-        `Please arrive 10 minutes prior to your slot. Thank you! 🙏`
-      );
-      const smsMsg = encodeURIComponent(
-        `${storeName}: Appt Confirmed Token #${appt.token_no} with ${docName} on ${apptDate} at ${apptTime}. Please reach 10 mins early.`
-      );
-      const waLink  = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${waMsg}`;
-      const smsLink = `sms:+${cleanPhone}?body=${smsMsg}`;
 
       setTimeout(() => {
         openModal('Appointment Confirmed 🎉', `
@@ -261,31 +246,58 @@ async function submitAppointment() {
             <p style="font-size:12.5px;color:var(--text-muted);margin:4px 0 0">${docName} · ${apptDate} at ${apptTime}</p>
           </div>
 
-          <div style="background:rgba(34, 197, 94, 0.08);border:1px solid rgba(34, 197, 94, 0.3);padding:14px;border-radius:10px;text-align:center;margin-top:12px">
+          <div style="background:rgba(59, 130, 246, 0.08);border:1px solid rgba(59, 130, 246, 0.3);padding:14px;border-radius:10px;text-align:center;margin-top:12px">
             <p style="font-weight:600;font-size:13px;color:var(--text-primary);margin:0 0 6px">
-              📲 Send Token & Appointment Details to Patient (${rawPhone})
+              📱 SMS Confirmation for Patient (${rawPhone})
             </p>
             <p style="font-size:11.5px;color:var(--text-muted);margin:0 0 12px">
-              Click below to send instant confirmation via WhatsApp or SMS:
+              Automated SMS dispatched in background. Click below to trigger or re-send:
             </p>
             <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-              <a href="${waLink}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(37,211,102,0.3)">
-                <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='currentColor'><path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'/></svg>
-                Send on WhatsApp
-              </a>
-              <a href="${smsLink}" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;background:var(--bg-card);color:var(--text-primary);font-size:13px;font-weight:600;border:1px solid var(--border)">
+              <button type="button" class="btn btn-primary" onclick="sendApptSmsBackground(${appt.id}, this)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
                 <svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/></svg>
-                Send via SMS
-              </a>
+                Send SMS Now (Background)
+              </button>
             </div>
           </div>
         `, [
-          { label: '💬 Send on WhatsApp', cls: 'btn-success', action: () => window.open(waLink, '_blank') },
-          { label: 'Done', cls: 'btn-secondary', action: closeModal }
+          { label: '📱 Send SMS', cls: 'btn-secondary', action: (btn) => sendApptSmsBackground(appt.id, btn) },
+          { label: 'Done', cls: 'btn-primary', action: closeModal }
         ]);
         lucide.createIcons();
       }, 250);
     }
   } catch (err) { showToast(err.message, 'error'); }
 }
+
+window.sendApptSmsBackground = async function(apptId, btnEl) {
+  const origHtml = btnEl ? btnEl.innerHTML : '';
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span style="display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin 0.75s linear infinite;margin-right:4px;vertical-align:middle"></span> Sending SMS...`;
+  }
+  try {
+    const res = await API.sendApptSMS(apptId);
+    if (res && res.sent) {
+      showToast(res.message || 'SMS confirmation sent in background!', 'success');
+      if (btnEl) {
+        btnEl.innerHTML = `✅ SMS Sent!`;
+        btnEl.classList.remove('btn-primary', 'btn-secondary');
+        btnEl.classList.add('btn-success');
+      }
+    } else {
+      showToast(res?.message || 'Could not send SMS. Check SMS Settings.', 'warning');
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.innerHTML = origHtml;
+      }
+    }
+  } catch (err) {
+    showToast(err.message || 'Failed to dispatch SMS', 'error');
+    if (btnEl) {
+      btnEl.disabled = false;
+      btnEl.innerHTML = origHtml;
+    }
+  }
+};
 

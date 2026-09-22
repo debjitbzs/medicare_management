@@ -120,6 +120,8 @@ const API = {
   },
   deleteLogo: () => API.delete('/api/settings/logo'),
   testSMS:    (data) => API.post('/api/settings/test-sms', data),
+  sendBillSMS: (billId) => API.post(`/api/sales/${billId}/send-sms`),
+  sendApptSMS: (apptId) => API.post(`/api/appointments/${apptId}/send-sms`),
 };
 
 // Helper: download CSV with auth token

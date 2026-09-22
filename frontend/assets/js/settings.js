@@ -143,10 +143,34 @@ async function renderSettings(tab = 'shop') {
               </label>
             </div>
 
-            <div class="form-group">
-              <label>Fast2SMS API Authorization Key</label>
-              <input type="password" id="set-fast2sms-key" class="form-control" placeholder="Paste your Fast2SMS API key here" autocomplete="off" />
-              <small style="color: var(--text-muted); font-size: 11px">Found in Fast2SMS Dashboard → Dev API → API Authorization</small>
+            <div class="form-group" style="margin-bottom: 16px">
+              <label style="font-weight: 600; margin-bottom: 8px; display: block">Choose Automated SMS Method:</label>
+              <div style="display: flex; gap: 20px; flex-wrap: wrap; background: var(--bg-card); padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border)">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer">
+                  <input type="radio" name="sms_provider_choice" value="android" id="provider-android" onchange="toggleSmsProviderUI()" />
+                  <span style="font-size: 13px">📱 <strong>Shop Android Phone SIM</strong> (Sent from your exact shop number, 100% Free)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer">
+                  <input type="radio" name="sms_provider_choice" value="fast2sms" id="provider-fast2sms" checked onchange="toggleSmsProviderUI()" />
+                  <span style="font-size: 13px">☁️ <strong>Fast2SMS Cloud</strong> (Free instant API key, no phone needed)</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="android-gateway-section" class="hidden" style="background: var(--bg-surface); padding: 14px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px">
+              <label>Android SMS Gateway URL (from your phone app)</label>
+              <input type="text" id="set-android-gateway-url" class="form-control" placeholder="e.g. http://192.168.1.15:8080" />
+              <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px">
+                📲 <strong>How to use your Shop Number:</strong> Install any free Android SMS Gateway app on your shop phone (e.g. <em>SMS Gateway</em> by capcom6 from GitHub/Play Store or <em>TextBee</em>). The app shows your phone's Wi-Fi IP address — enter it above. All SMS will send directly using your shop SIM's free daily SMS pack!
+              </small>
+            </div>
+
+            <div id="fast2sms-section">
+              <div class="form-group">
+                <label>Fast2SMS API Authorization Key</label>
+                <input type="password" id="set-fast2sms-key" class="form-control" placeholder="Paste your Fast2SMS API key here" autocomplete="off" />
+                <small style="color: var(--text-muted); font-size: 11px">Found in Fast2SMS Dashboard → Dev API → API Authorization (Free sign up at fast2sms.com)</small>
+              </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px">
@@ -256,6 +280,16 @@ async function loadSettingsData() {
     setVal('set-low-stock', s.low_stock_days || '20');
     setVal('set-expiry-days', s.expiry_alert_days || '90');
     setVal('set-fast2sms-key', s.fast2sms_api_key || '');
+    setVal('set-android-gateway-url', s.android_gateway_url || '');
+
+    const isAndroid = (s.sms_provider || 'fast2sms') === 'android';
+    const radAndroid = document.getElementById('provider-android');
+    const radFast2sms = document.getElementById('provider-fast2sms');
+    if (radAndroid && radFast2sms) {
+      radAndroid.checked = isAndroid;
+      radFast2sms.checked = !isAndroid;
+      toggleSmsProviderUI();
+    }
 
     const smsEn = document.getElementById('set-auto-sms-enabled');
     if (smsEn) smsEn.checked = s.auto_sms_enabled === 'true';
@@ -307,7 +341,14 @@ async function uploadStoreLogoFromSettings(e) {
     showToast(err.message || 'Failed to upload logo', 'error');
   }
 }
-window.uploadStoreLogoFromSettings = uploadStoreLogoFromSettings;
+function toggleSmsProviderUI() {
+  const isAndroid = document.getElementById('provider-android')?.checked;
+  const androidSec = document.getElementById('android-gateway-section');
+  const fast2smsSec = document.getElementById('fast2sms-section');
+  if (androidSec) androidSec.classList.toggle('hidden', !isAndroid);
+  if (fast2smsSec) fast2smsSec.classList.toggle('hidden', isAndroid);
+}
+window.toggleSmsProviderUI = toggleSmsProviderUI;
 
 async function saveSmsSettings(e) {
   e.preventDefault();
@@ -315,8 +356,11 @@ async function saveSmsSettings(e) {
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
+  const isAndroid = document.getElementById('provider-android')?.checked;
   const data = {
     auto_sms_enabled: document.getElementById('set-auto-sms-enabled').checked ? 'true' : 'false',
+    sms_provider: isAndroid ? 'android' : 'fast2sms',
+    android_gateway_url: document.getElementById('set-android-gateway-url').value.trim(),
     fast2sms_api_key: document.getElementById('set-fast2sms-key').value.trim(),
     auto_sms_bill: document.getElementById('set-auto-sms-bill').checked ? 'true' : 'false',
     auto_sms_appointment: document.getElementById('set-auto-sms-appt').checked ? 'true' : 'false',
@@ -337,7 +381,9 @@ window.saveSmsSettings = saveSmsSettings;
 
 async function sendTestSms() {
   const phone = document.getElementById('test-sms-phone')?.value.trim();
+  const isAndroid = document.getElementById('provider-android')?.checked;
   const apiKey = document.getElementById('set-fast2sms-key')?.value.trim();
+  const androidUrl = document.getElementById('set-android-gateway-url')?.value.trim();
   const resEl = document.getElementById('test-sms-result');
   const btn = document.getElementById('btn-test-sms');
 
@@ -351,21 +397,26 @@ async function sendTestSms() {
   if (resEl) resEl.className = 'hidden';
 
   try {
-    const res = await API.testSMS({ phone, api_key: apiKey });
+    const res = await API.testSMS({
+      phone,
+      provider: isAndroid ? 'android' : 'fast2sms',
+      api_key: apiKey,
+      android_url: androidUrl,
+    });
     if (resEl) {
       resEl.classList.remove('hidden');
       if (res.return) {
         resEl.style.background = 'rgba(34, 197, 94, 0.15)';
         resEl.style.color = 'var(--success)';
         resEl.style.border = '1px solid var(--success)';
-        resEl.innerHTML = `✅ <b>Success!</b> Test SMS dispatched to ${phone}. Message ID: ${res.request_id || 'OK'}`;
+        resEl.innerHTML = `✅ <b>Success!</b> Test SMS dispatched to ${phone}. Provider response: ${res.message || 'OK'}`;
         showToast('Test SMS sent successfully!', 'success');
       } else {
         resEl.style.background = 'rgba(239, 68, 68, 0.15)';
         resEl.style.color = 'var(--danger)';
         resEl.style.border = '1px solid var(--danger)';
-        resEl.innerHTML = `❌ <b>Failed:</b> ${res.message || 'Check your Fast2SMS API key'}`;
-        showToast('SMS failed: ' + (res.message || 'Check key'), 'error');
+        resEl.innerHTML = `❌ <b>Failed:</b> ${res.message || 'Check SMS settings'}`;
+        showToast('SMS failed: ' + (res.message || 'Check settings'), 'error');
       }
     }
   } catch (err) {

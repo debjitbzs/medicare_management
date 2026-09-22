@@ -202,3 +202,21 @@ def daily_sales_stats(
         {"days_ago": f"-{days} days"},
     ).fetchall()
     return [{"date": str(r[0]), "bill_count": r[1], "revenue": r[2] or 0} for r in results]
+
+
+@router.post("/{bill_id}/send-sms")
+def send_bill_sms(bill_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    bill = db.query(models.Bill).filter(models.Bill.id == bill_id).first()
+    if not bill:
+        raise HTTPException(status_code=404, detail="Bill not found")
+    if not bill.patient_phone:
+        raise HTTPException(status_code=400, detail="This bill has no patient phone number attached.")
+
+    store_name_row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "store_name").first()
+    s_name = store_name_row.value if store_name_row else "Pharmacy"
+    items_summary = ", ".join([f"{i.medicine.name if i.medicine else 'Item'} x{i.qty_sold}" for i in bill.items])
+    msg = f"{s_name}: Bill #{bill.bill_no} of Rs.{bill.total_amount:.2f} generated. Items: {items_summary}. Thank you!"
+
+    from sms_service import trigger_auto_sms
+    res = trigger_auto_sms(db, bill.patient_phone, msg, event_type="bill", force=True)
+    return res

@@ -100,13 +100,23 @@ def delete_logo(db: Session = Depends(get_db), user=Depends(get_current_user)):
 @router.post("/test-sms")
 def test_sms(payload: dict, db: Session = Depends(get_db), user=Depends(get_current_user)):
     phone = payload.get("phone", "")
+    provider = payload.get("provider", "fast2sms").lower()
     api_key = payload.get("api_key", "").strip()
-    if not api_key:
-        row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "fast2sms_api_key").first()
-        api_key = row.value if row else ""
-    if not api_key:
-        raise HTTPException(status_code=400, detail="Please enter a Fast2SMS API key first.")
-    from sms_service import send_fast2sms
-    res = send_fast2sms(api_key, phone, "Medify Test: Automated SMS is working properly! Thank you.")
-    return res
+    android_url = payload.get("android_url", "").strip()
+
+    from sms_service import send_fast2sms, send_android_gateway
+    if provider == "android":
+        if not android_url:
+            row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "android_gateway_url").first()
+            android_url = row.value if row else ""
+        if not android_url:
+            raise HTTPException(status_code=400, detail="Please enter your Android Gateway URL (e.g. http://192.168.1.15:8080).")
+        return send_android_gateway(android_url, phone, "Medify Test: Automated SMS via Shop Android SIM Gateway is working!")
+    else:
+        if not api_key:
+            row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "fast2sms_api_key").first()
+            api_key = row.value if row else ""
+        if not api_key:
+            raise HTTPException(status_code=400, detail="Please enter a Fast2SMS API key first.")
+        return send_fast2sms(api_key, phone, "Medify Test: Automated SMS is working properly! Thank you.")
 

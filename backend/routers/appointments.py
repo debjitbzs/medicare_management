@@ -151,3 +151,25 @@ def mark_notified(appt_id: int, db: Session = Depends(get_db), user=Depends(get_
     a.is_notified = True
     db.commit()
     return {"message": "Marked as notified"}
+
+
+@router.post("/{appt_id}/send-sms")
+def send_appt_sms(appt_id: int, db: Session = Depends(get_db), user=Depends(get_current_user)):
+    a = db.query(models.Appointment).filter(models.Appointment.id == appt_id).first()
+    if not a:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    phone = a.patient.phone if a.patient else None
+    if not phone:
+        raise HTTPException(status_code=400, detail="This patient has no phone number attached.")
+
+    store_name_row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "store_name").first()
+    s_name = store_name_row.value if store_name_row else "Pharmacy"
+    doc_name = a.doctor.name if a.doctor else "Doctor"
+    msg = f"{s_name}: Appt Confirmed! Token #{a.token_no} with Dr. {doc_name} on {a.appointment_date} at {a.appointment_time}. Please reach 10 mins early."
+
+    from sms_service import trigger_auto_sms
+    res = trigger_auto_sms(db, phone, msg, event_type="appointment", force=True)
+    if res.get("sent"):
+        a.is_notified = True
+        db.commit()
+    return res

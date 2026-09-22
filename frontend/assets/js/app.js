@@ -341,7 +341,11 @@ function openModal(title, bodyHtml, footer) {
       button.type = 'button';
       button.className = `btn ${btn.cls || 'btn-secondary'}`;
       button.textContent = btn.label;
-      button.onclick = btn.action;
+      button.onclick = (e) => {
+        if (typeof btn.action === 'function') {
+          btn.action(button, e);
+        }
+      };
       footEl.appendChild(button);
     });
   } else if (typeof footer === 'string') {
