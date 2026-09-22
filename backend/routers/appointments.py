@@ -24,6 +24,7 @@ def build_appt_out(a: models.Appointment) -> schemas.AppointmentOut:
         created_at=a.created_at,
         doctor_name=a.doctor.name if a.doctor else None,
         patient_name=a.patient.name if a.patient else None,
+        patient_phone=a.patient.phone if a.patient else None,
         doctor_specialization=a.doctor.specialization if a.doctor else None,
     )
 
@@ -82,6 +83,18 @@ def create_appointment(appt: schemas.AppointmentCreate, db: Session = Depends(ge
     db.add(db_appt)
     db.commit()
     db.refresh(db_appt)
+
+    if db_appt.patient and db_appt.patient.phone:
+        try:
+            store_name_row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "store_name").first()
+            s_name = store_name_row.value if store_name_row else "Pharmacy"
+            doc_name = db_appt.doctor.name if db_appt.doctor else "Doctor"
+            msg = f"{s_name}: Appt Confirmed! Token #{db_appt.token_no} with Dr. {doc_name} on {db_appt.appointment_date} at {db_appt.appointment_time}. Please reach 10 mins early."
+            from sms_service import trigger_auto_sms
+            trigger_auto_sms(db, db_appt.patient.phone, msg, event_type="appointment")
+        except Exception:
+            pass
+
     return build_appt_out(db_appt)
 
 

@@ -20,6 +20,9 @@ async function renderSettings(tab = 'shop') {
       <button class="tab-btn ${currentSettingsTab === 'shop' ? 'active' : ''}" onclick="switchSettingsTab('shop')">
         <i data-lucide="store" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px"></i> Medicine Shop Details
       </button>
+      <button class="tab-btn ${currentSettingsTab === 'sms' ? 'active' : ''}" onclick="switchSettingsTab('sms')">
+        <i data-lucide="message-square" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px"></i> SMS Automation
+      </button>
       <button class="tab-btn ${currentSettingsTab === 'users' ? 'active' : ''}" onclick="switchSettingsTab('users')">
         <i data-lucide="users" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px"></i> Users & Staff Passwords
       </button>
@@ -33,6 +36,22 @@ async function renderSettings(tab = 'shop') {
           <span class="badge badge-primary">Printed on All Bills</span>
         </div>
         <form id="settings-form" onsubmit="saveSettings(event)" style="padding: 16px 0">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 12px 16px; background: var(--bg-surface); border-radius: var(--radius-md); border: 1px solid var(--border)">
+            <div id="settings-logo-wrap" style="width: 52px; height: 52px; border-radius: 8px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0">
+              <img id="settings-logo-img" src="" class="hidden" style="width: 100%; height: 100%; object-fit: contain; padding: 2px" alt="Store Logo" />
+              <i id="settings-logo-icon" data-lucide="image" style="color: var(--text-muted); width: 24px; height: 24px"></i>
+            </div>
+            <div style="flex: 1">
+              <div style="font-weight: 600; font-size: 13.5px; color: var(--text-primary)">Pharmacy Logo</div>
+              <div style="font-size: 12px; color: var(--text-muted)">Displays on bills, thermal receipts, and sidebar</div>
+            </div>
+            <div>
+              <input type="file" id="settings-logo-input" accept="image/*" class="hidden" onchange="uploadStoreLogoFromSettings(event)" />
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('settings-logo-input').click()">
+                <i data-lucide="upload"></i> Upload Logo
+              </button>
+            </div>
+          </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
             <div class="form-group">
               <label>Medicine Shop Name <span style="color: var(--danger)">*</span></label>
@@ -97,7 +116,80 @@ async function renderSettings(tab = 'shop') {
       </div>
     </div>
 
-    <!-- Tab 2: User Accounts & Passwords -->
+    <!-- Tab 2: SMS Automation -->
+    <div id="tab-sms-panel" class="${currentSettingsTab === 'sms' ? '' : 'hidden'}" style="max-width: 850px">
+      <div class="card" style="margin-bottom: 24px">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="send" style="margin-right: 8px"></i> Automated Background SMS</span>
+          <span class="badge badge-accent">No Laptop Login Needed</span>
+        </div>
+
+        <div style="padding: 16px 0">
+          <div style="background: rgba(79, 70, 229, 0.08); border: 1px solid rgba(79, 70, 229, 0.25); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px">
+            <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--text-primary)">🚀 How Background SMS Automation Works:</h4>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0; line-height: 1.6">
+              When enabled, our backend automatically shoots an instant SMS to the patient's phone the moment a bill is generated or an appointment is booked. You do not need to log in to WhatsApp, scan QR codes, or click send buttons!
+            </p>
+            <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted)">
+              💡 <strong>Free Setup:</strong> Register at <a href="https://www.fast2sms.com" target="_blank" rel="noopener" style="color: var(--primary-light); text-decoration: underline">Fast2SMS.com</a> (Takes 30 seconds with mobile number). Copy your <strong>API Authorization Key</strong> from their dashboard and paste it below.
+            </div>
+          </div>
+
+          <form id="sms-settings-form" onsubmit="saveSmsSettings(event)">
+            <div class="form-group" style="margin-bottom: 16px">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+                <input type="checkbox" id="set-auto-sms-enabled" style="width: 18px; height: 18px; accent-color: var(--primary)" />
+                <span style="font-weight: 600; font-size: 14px">Enable Automated Background SMS Dispatch</span>
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label>Fast2SMS API Authorization Key</label>
+              <input type="password" id="set-fast2sms-key" class="form-control" placeholder="Paste your Fast2SMS API key here" autocomplete="off" />
+              <small style="color: var(--text-muted); font-size: 11px">Found in Fast2SMS Dashboard → Dev API → API Authorization</small>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px">
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+                  <input type="checkbox" id="set-auto-sms-bill" checked style="width: 16px; height: 16px; accent-color: var(--primary)" />
+                  <span style="font-size: 13px">Auto-send SMS when Bill is created</span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+                  <input type="checkbox" id="set-auto-sms-appt" checked style="width: 16px; height: 16px; accent-color: var(--primary)" />
+                  <span style="font-size: 13px">Auto-send SMS when Appointment is booked</span>
+                </label>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px">
+              <button type="submit" class="btn btn-primary" id="save-sms-btn">
+                <i data-lucide="save"></i> Save SMS Configuration
+              </button>
+            </div>
+          </form>
+
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0" />
+
+          <!-- Test SMS Tool -->
+          <div style="background: var(--bg-surface); padding: 16px; border-radius: 10px; border: 1px solid var(--border)">
+            <h4 style="margin: 0 0 4px; font-size: 13.5px"><i data-lucide="phone-call" style="width: 14px; height: 14px; vertical-align: middle"></i> Test Live SMS Sending</h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px">Send an immediate test SMS to any mobile number to verify your API key</p>
+            <div style="display: flex; gap: 10px; max-width: 450px">
+              <input type="text" id="test-sms-phone" class="form-control" placeholder="Enter 10-digit mobile number" maxlength="10" />
+              <button type="button" class="btn btn-outline" id="btn-test-sms" onclick="sendTestSms()" style="white-space: nowrap">
+                <i data-lucide="send"></i> Send Test
+              </button>
+            </div>
+            <div id="test-sms-result" class="hidden" style="margin-top: 10px; font-size: 12px; padding: 8px 12px; border-radius: 6px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: User Accounts & Passwords -->
     <div id="tab-users-panel" class="${currentSettingsTab === 'users' ? '' : 'hidden'}" style="max-width: 950px">
       <div class="card">
         <div class="card-header flex justify-between items-center">
@@ -118,7 +210,7 @@ async function renderSettings(tab = 'shop') {
   `;
 
   lucide.createIcons();
-  if (currentSettingsTab === 'shop') {
+  if (currentSettingsTab === 'shop' || currentSettingsTab === 'sms') {
     await loadSettingsData();
   } else {
     await loadUsersTable();
@@ -128,14 +220,16 @@ async function renderSettings(tab = 'shop') {
 function switchSettingsTab(tab) {
   currentSettingsTab = tab;
   document.querySelectorAll('.tabs .tab-btn').forEach((btn, idx) => {
-    btn.classList.toggle('active', (idx === 0 && tab === 'shop') || (idx === 1 && tab === 'users'));
+    btn.classList.toggle('active', (idx === 0 && tab === 'shop') || (idx === 1 && tab === 'sms') || (idx === 2 && tab === 'users'));
   });
   const shopP = document.getElementById('tab-shop-panel');
+  const smsP  = document.getElementById('tab-sms-panel');
   const userP = document.getElementById('tab-users-panel');
   if (shopP) shopP.classList.toggle('hidden', tab !== 'shop');
+  if (smsP)  smsP.classList.toggle('hidden', tab !== 'sms');
   if (userP) userP.classList.toggle('hidden', tab !== 'users');
 
-  if (tab === 'shop') loadSettingsData();
+  if (tab === 'shop' || tab === 'sms') loadSettingsData();
   if (tab === 'users') loadUsersTable();
 }
 
@@ -161,10 +255,136 @@ async function loadSettingsData() {
     setVal('set-address', s.store_address || '');
     setVal('set-low-stock', s.low_stock_days || '20');
     setVal('set-expiry-days', s.expiry_alert_days || '90');
+    setVal('set-fast2sms-key', s.fast2sms_api_key || '');
+
+    const smsEn = document.getElementById('set-auto-sms-enabled');
+    if (smsEn) smsEn.checked = s.auto_sms_enabled === 'true';
+    const smsBill = document.getElementById('set-auto-sms-bill');
+    if (smsBill) smsBill.checked = s.auto_sms_bill !== 'false';
+    const smsAppt = document.getElementById('set-auto-sms-appt');
+    if (smsAppt) smsAppt.checked = s.auto_sms_appointment !== 'false';
+
+    if (s.store_logo) {
+      const logoImg = document.getElementById('settings-logo-img');
+      const logoIcon = document.getElementById('settings-logo-icon');
+      if (logoImg) {
+        logoImg.src = s.store_logo;
+        logoImg.classList.remove('hidden');
+        if (logoIcon) logoIcon.classList.add('hidden');
+      }
+    }
   } catch (err) {
     console.error('Failed to load settings:', err);
   }
 }
+
+async function uploadStoreLogoFromSettings(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const res = await API.uploadLogo(fd);
+    showToast('Store logo updated successfully!', 'success');
+    if (res.url) {
+      if (window._storeSettings) window._storeSettings.store_logo = res.url;
+      const logoImg = document.getElementById('settings-logo-img');
+      const logoIcon = document.getElementById('settings-logo-icon');
+      if (logoImg) {
+        logoImg.src = res.url + '?t=' + Date.now();
+        logoImg.classList.remove('hidden');
+        if (logoIcon) logoIcon.classList.add('hidden');
+      }
+      const sideLogo = document.getElementById('sidebar-logo-img');
+      const sideFallback = document.getElementById('sidebar-logo-fallback');
+      if (sideLogo && sideFallback) {
+        sideLogo.src = res.url + '?t=' + Date.now();
+        sideLogo.classList.remove('hidden');
+        sideFallback.classList.add('hidden');
+      }
+    }
+  } catch (err) {
+    showToast(err.message || 'Failed to upload logo', 'error');
+  }
+}
+window.uploadStoreLogoFromSettings = uploadStoreLogoFromSettings;
+
+async function saveSmsSettings(e) {
+  e.preventDefault();
+  const btn = document.getElementById('save-sms-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const data = {
+    auto_sms_enabled: document.getElementById('set-auto-sms-enabled').checked ? 'true' : 'false',
+    fast2sms_api_key: document.getElementById('set-fast2sms-key').value.trim(),
+    auto_sms_bill: document.getElementById('set-auto-sms-bill').checked ? 'true' : 'false',
+    auto_sms_appointment: document.getElementById('set-auto-sms-appt').checked ? 'true' : 'false',
+  };
+
+  try {
+    await API.updateSettings(data);
+    showToast('SMS Automation settings saved successfully!', 'success');
+  } catch (err) {
+    showToast(err.message || 'Failed to save SMS settings', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="save"></i> Save SMS Configuration';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+window.saveSmsSettings = saveSmsSettings;
+
+async function sendTestSms() {
+  const phone = document.getElementById('test-sms-phone')?.value.trim();
+  const apiKey = document.getElementById('set-fast2sms-key')?.value.trim();
+  const resEl = document.getElementById('test-sms-result');
+  const btn = document.getElementById('btn-test-sms');
+
+  if (!phone || phone.length < 10) {
+    showToast('Please enter a valid 10-digit mobile number', 'warning');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  if (resEl) resEl.className = 'hidden';
+
+  try {
+    const res = await API.testSMS({ phone, api_key: apiKey });
+    if (resEl) {
+      resEl.classList.remove('hidden');
+      if (res.return) {
+        resEl.style.background = 'rgba(34, 197, 94, 0.15)';
+        resEl.style.color = 'var(--success)';
+        resEl.style.border = '1px solid var(--success)';
+        resEl.innerHTML = `✅ <b>Success!</b> Test SMS dispatched to ${phone}. Message ID: ${res.request_id || 'OK'}`;
+        showToast('Test SMS sent successfully!', 'success');
+      } else {
+        resEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        resEl.style.color = 'var(--danger)';
+        resEl.style.border = '1px solid var(--danger)';
+        resEl.innerHTML = `❌ <b>Failed:</b> ${res.message || 'Check your Fast2SMS API key'}`;
+        showToast('SMS failed: ' + (res.message || 'Check key'), 'error');
+      }
+    }
+  } catch (err) {
+    if (resEl) {
+      resEl.classList.remove('hidden');
+      resEl.style.background = 'rgba(239, 68, 68, 0.15)';
+      resEl.style.color = 'var(--danger)';
+      resEl.style.border = '1px solid var(--danger)';
+      resEl.innerHTML = `❌ <b>Error:</b> ${err.message}`;
+    }
+    showToast(err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i data-lucide="send"></i> Send Test';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+window.sendTestSms = sendTestSms;
+
 
 async function saveSettings(e) {
   e.preventDefault();

@@ -16,7 +16,7 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
-backend/*.db
+backend/*.db*
 
 # Uploads & temporary reports
 backend/uploads/

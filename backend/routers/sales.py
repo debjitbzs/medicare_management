@@ -100,6 +100,16 @@ def create_bill(bill_data: schemas.BillCreate, db: Session = Depends(get_db), us
     db.commit()
     db.refresh(db_bill)
 
+    if db_bill.patient_phone:
+        try:
+            store_name_row = db.query(models.StoreSetting).filter(models.StoreSetting.key == "store_name").first()
+            s_name = store_name_row.value if store_name_row else "Pharmacy"
+            msg = f"{s_name}: Bill #{db_bill.bill_no} of Rs.{db_bill.total_amount:.2f} generated successfully via {db_bill.payment_method}. Thank you for visiting!"
+            from sms_service import trigger_auto_sms
+            trigger_auto_sms(db, db_bill.patient_phone, msg, event_type="bill")
+        except Exception:
+            pass
+
     return _build_bill_out(db_bill)
 
 

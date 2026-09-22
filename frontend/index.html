@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MediCare Pro — Pharmacy Management</title>
-  <meta name="description" content="Complete pharmacy management system with inventory, billing, doctor appointments, and patient records." />
+  <title>Medify — Smart Pharmacy Management</title>
+  <meta name="description" content="Medify: Complete pharmacy management platform with inventory, billing, appointments, and patient records. Built for Indian pharmacies." />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -22,9 +22,185 @@
 <body>
 
 <!-- ══════════════════════════════════════════════════════════
+     SETUP WIZARD SCREEN (first-run only)
+═══════════════════════════════════════════════════════════════ -->
+<div id="setup-screen" class="setup-screen hidden">
+  <div class="setup-bg">
+    <div class="setup-orb setup-orb-1"></div>
+    <div class="setup-orb setup-orb-2"></div>
+    <div class="setup-orb setup-orb-3"></div>
+  </div>
+  <div class="setup-container">
+    <!-- Left branding panel -->
+    <div class="setup-brand-panel">
+      <div class="setup-brand-logo">
+        <div class="medify-icon">
+          <i data-lucide="activity"></i>
+        </div>
+        <div class="medify-wordmark">
+          <span class="medify-name">Medify</span>
+          <span class="medify-tagline">Pharmacy Platform</span>
+        </div>
+      </div>
+      <h2 class="setup-brand-headline">Your Pharmacy,<br/>Now Smarter.</h2>
+      <p class="setup-brand-desc">Set up your store in 2 minutes. Manage medicines, billing, stock, and doctor appointments — all in one place.</p>
+      <ul class="setup-feature-list">
+        <li><i data-lucide="check-circle"></i> Smart inventory tracking</li>
+        <li><i data-lucide="check-circle"></i> One-click billing & receipts</li>
+        <li><i data-lucide="check-circle"></i> Doctor appointment scheduling</li>
+        <li><i data-lucide="check-circle"></i> WhatsApp & SMS notifications</li>
+        <li><i data-lucide="check-circle"></i> Reports & analytics</li>
+      </ul>
+      <div class="setup-powered">Powered by <strong>Medify</strong> · Apki Dukan, Hamari Zimmedari</div>
+    </div>
+
+    <!-- Right wizard panel -->
+    <div class="setup-wizard-panel">
+      <div style="text-align:right;margin-bottom:8px">
+        <button class="btn btn-ghost btn-sm" onclick="showLogin()" style="font-size:12px;opacity:0.7">
+          <i data-lucide="arrow-left"></i> Back to Login
+        </button>
+      </div>
+      <div class="setup-steps-indicator">
+        <div class="setup-step-dot active current" id="setup-dot-1">
+          <span>1</span>
+        </div>
+        <div class="setup-step-line"></div>
+        <div class="setup-step-dot" id="setup-dot-2">
+          <span>2</span>
+        </div>
+        <div class="setup-step-line"></div>
+        <div class="setup-step-dot" id="setup-dot-3">
+          <span>3</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Store Profile -->
+      <div id="setup-step-1" class="setup-step">
+        <h3 class="setup-step-title">🏪 Your Store Details</h3>
+        <p class="setup-step-sub">Tell us about your pharmacy</p>
+        <div class="setup-field">
+          <label>Store / Pharmacy Name <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="store"></i>
+            <input id="setup-store-name" type="text" placeholder="e.g. Sharma Medical Hall" required />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Phone Number <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="phone"></i>
+            <input id="setup-store-phone" type="tel" placeholder="+91 XXXXX XXXXX" required />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Email Address <span class="opt">(optional)</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="mail"></i>
+            <input id="setup-store-email" type="email" placeholder="store@example.com" />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>App Language</label>
+          <div class="setup-input-wrap">
+            <i data-lucide="globe"></i>
+            <select id="setup-language">
+              <option value="en">🇬🇧 English</option>
+              <option value="hi">🇮🇳 हिन्दी (Hindi)</option>
+              <option value="bn">🇧🇩 বাংলা (Bengali)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full setup-next-btn" onclick="setupNext()">
+          Continue <i data-lucide="arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Step 2: Admin Account -->
+      <div id="setup-step-2" class="setup-step hidden">
+        <h3 class="setup-step-title">👤 Admin Account</h3>
+        <p class="setup-step-sub">Create your owner / admin login</p>
+        <div id="setup-err-2" class="alert-error hidden"></div>
+        <div class="setup-field">
+          <label>Full Name <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="user"></i>
+            <input id="setup-admin-name" type="text" placeholder="Your full name" required />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Username <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="at-sign"></i>
+            <input id="setup-admin-user" type="text" placeholder="admin" required />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Password <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="lock"></i>
+            <input id="setup-admin-pw" type="password" placeholder="Min 6 characters" required />
+          </div>
+        </div>
+        <div class="setup-field">
+          <label>Confirm Password <span class="req">*</span></label>
+          <div class="setup-input-wrap">
+            <i data-lucide="lock-keyhole"></i>
+            <input id="setup-admin-pw2" type="password" placeholder="Re-enter password" required />
+          </div>
+        </div>
+        <div class="setup-btn-row">
+          <button class="btn btn-ghost" onclick="setupBack()">
+            <i data-lucide="arrow-left"></i> Back
+          </button>
+          <button class="btn btn-primary" onclick="setupNext()">
+            Continue <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Logo + Launch -->
+      <div id="setup-step-3" class="setup-step hidden">
+        <h3 class="setup-step-title">🖼️ Store Logo <span class="opt">(optional)</span></h3>
+        <p class="setup-step-sub">Add your pharmacy logo — it will appear on receipts and the app</p>
+        <div id="setup-err-3" class="alert-error hidden"></div>
+
+        <div class="setup-logo-upload" onclick="document.getElementById('setup-logo-input').click()">
+          <img id="setup-logo-preview" class="hidden" alt="Logo preview" />
+          <div id="setup-logo-placeholder">
+            <i data-lucide="image-plus"></i>
+            <span>Click to upload logo</span>
+            <small>PNG, JPG, WEBP — recommended 200×200px</small>
+          </div>
+        </div>
+        <input type="file" id="setup-logo-input" accept="image/*" class="hidden" />
+
+        <div class="setup-summary" id="setup-summary">
+          <!-- Filled by JS but let's keep it simple — show a ready message -->
+          <div class="setup-ready-badge">
+            <i data-lucide="rocket"></i>
+            <span>Everything is ready to launch!</span>
+          </div>
+        </div>
+
+        <div class="setup-btn-row">
+          <button class="btn btn-ghost" onclick="setupBack()">
+            <i data-lucide="arrow-left"></i> Back
+          </button>
+          <button class="btn btn-primary" id="setup-submit-btn" onclick="submitSetup()">
+            Launch My Store 🚀
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
      LOGIN SCREEN
 ═══════════════════════════════════════════════════════════════ -->
-<div id="login-screen" class="login-screen">
+<div id="login-screen" class="login-screen hidden">
   <div class="login-bg">
     <div class="login-orb login-orb-1"></div>
     <div class="login-orb login-orb-2"></div>
@@ -32,12 +208,15 @@
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><i data-lucide="cross" class="logo-cross"></i></div>
+      <div class="medify-icon-lg">
+        <i data-lucide="activity"></i>
+      </div>
       <div class="logo-text">
-        <h1>MediCare Pro</h1>
-        <p>Pharmacy Management System</p>
+        <h1>Medify</h1>
+        <p>Pharmacy Management Platform</p>
       </div>
     </div>
+    <p class="login-store-name" id="login-store-name"></p>
     <form id="login-form" class="login-form">
       <div class="form-group">
         <label for="login-username">Username</label>
@@ -60,7 +239,14 @@
         <div id="login-spinner" class="btn-spinner hidden"></div>
       </button>
     </form>
-    <p class="login-hint">Default: admin / admin123</p>
+    <div class="login-divider">
+      <span>or</span>
+    </div>
+    <button class="btn btn-outline btn-full" onclick="showSetupWizard()" id="register-store-btn">
+      <i data-lucide="store"></i>
+      Register a New Store
+    </button>
+    <div class="login-powered">Powered by <strong>Medify</strong> · Apki Dukan, Hamari Zimmedari</div>
   </div>
 </div>
 
@@ -73,8 +259,15 @@
   <aside id="sidebar" class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <div class="logo-icon-sm"><i data-lucide="cross"></i></div>
-        <span class="sidebar-brand">MediCare Pro</span>
+        <div class="sidebar-logo-container" id="sidebar-logo-container">
+          <img id="sidebar-logo-img" class="sidebar-logo-img hidden" alt="Store Logo" />
+          <div id="sidebar-logo-fallback" class="logo-icon-sm"><i data-lucide="activity"></i></div>
+        </div>
+        <div class="sidebar-brand-wrap">
+          <span class="sidebar-brand sidebar-store-title" id="sidebar-store-title">My Pharmacy</span>
+          <span class="sidebar-sub-brand">powered by <strong>Medify</strong></span>
+          <span class="sidebar-store-name hidden" id="sidebar-store-name"></span>
+        </div>
       </div>
       <button id="sidebar-close" class="sidebar-close-btn"><i data-lucide="x"></i></button>
     </div>
@@ -112,7 +305,7 @@
         <i data-lucide="bar-chart-2"></i><span>Reports</span>
       </a>
       <a href="#users" class="nav-item" data-page="users">
-        <i data-lucide="user-plus"></i><span>Users & Staff</span>
+        <i data-lucide="user-plus"></i><span>Users &amp; Staff</span>
       </a>
       <a href="#settings" class="nav-item" data-page="settings">
         <i data-lucide="settings"></i><span>Shop Settings</span>
@@ -128,6 +321,7 @@
         </div>
         <button id="logout-btn" class="logout-btn" title="Logout"><i data-lucide="log-out"></i></button>
       </div>
+      <div class="sidebar-powered">⚡ Powered by Medify</div>
     </div>
   </aside>
 

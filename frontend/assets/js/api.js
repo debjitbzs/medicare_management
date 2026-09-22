@@ -6,7 +6,7 @@ const API_BASE = window.API_BASE_URL || 'http://localhost:8000';
 
 const API = {
   async request(method, path, body = null, raw = false) {
-    const token = localStorage.getItem('medicare_token');
+    const token = localStorage.getItem('medify_token');
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -41,6 +41,8 @@ const API = {
   raw:    (method, path, body) => API.request(method, path, body, true),
 
   // Auth
+  setupStatus: ()    => fetch('/api/auth/setup-status').then(r => r.json()),
+  setup:   (data)    => API.post('/api/auth/setup', data),
   login:   (data)    => API.post('/api/auth/login', data),
   getMe:   ()        => API.get('/api/auth/me'),
   getUsers: ()       => API.get('/api/auth/users'),
@@ -106,11 +108,23 @@ const API = {
   // Settings
   getSettings:    () => API.get('/api/settings'),
   updateSettings: (data) => API.put('/api/settings', data),
+
+  // Logo
+  uploadLogo: (formData) => {
+    const token = localStorage.getItem('medify_token');
+    return fetch('/api/settings/logo', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    }).then(r => r.json());
+  },
+  deleteLogo: () => API.delete('/api/settings/logo'),
+  testSMS:    (data) => API.post('/api/settings/test-sms', data),
 };
 
 // Helper: download CSV with auth token
 function downloadCsv(url) {
-  const token = localStorage.getItem('medicare_token');
+  const token = localStorage.getItem('medify_token');
   fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
     .then(r => r.blob())
     .then(blob => {

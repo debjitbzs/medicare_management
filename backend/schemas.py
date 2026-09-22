@@ -231,6 +231,7 @@ class AppointmentOut(AppointmentCreate):
     created_at: datetime
     doctor_name: Optional[str] = None
     patient_name: Optional[str] = None
+    patient_phone: Optional[str] = None
     doctor_specialization: Optional[str] = None
     model_config = {"from_attributes": True}
 

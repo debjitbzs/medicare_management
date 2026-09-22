@@ -23,12 +23,12 @@ const APP = {
   init() {
     AUTH.init();
     if (!AUTH.isLoggedIn()) {
-      document.getElementById('login-screen').classList.remove('hidden');
-      document.getElementById('app').classList.add('hidden');
+      // bootApp() handles showing login or setup
       return;
     }
 
     document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
 
     this.setupUserUI();
@@ -49,9 +49,23 @@ const APP = {
       if (s) {
         window._storeSettings = s;
         if (s.store_name) {
-          const brandEl = document.querySelector('.sidebar-brand');
-          if (brandEl) brandEl.textContent = s.store_name;
-          document.title = `${s.store_name} — Pharmacy Management`;
+          const storeTitleEl = document.getElementById('sidebar-store-title') || document.querySelector('.sidebar-brand');
+          if (storeTitleEl) storeTitleEl.textContent = s.store_name;
+          const oldStoreNameEl = document.getElementById('sidebar-store-name');
+          if (oldStoreNameEl) oldStoreNameEl.textContent = s.store_name;
+          document.title = `${s.store_name} — Medify`;
+          const loginStoreName = document.getElementById('login-store-name');
+          if (loginStoreName) loginStoreName.textContent = s.store_name;
+        }
+        const logoImg = document.getElementById('sidebar-logo-img');
+        const logoFallback = document.getElementById('sidebar-logo-fallback');
+        if (s.store_logo && logoImg && logoFallback) {
+          logoImg.src = s.store_logo;
+          logoImg.classList.remove('hidden');
+          logoFallback.classList.add('hidden');
+        } else if (logoImg && logoFallback) {
+          logoImg.classList.add('hidden');
+          logoFallback.classList.remove('hidden');
         }
       }
     } catch (err) {}
@@ -345,6 +359,11 @@ function openModal(title, bodyHtml, footer) {
 function closeModal() {
   const overlay = document.getElementById('modal-overlay');
   if (overlay) overlay.classList.add('hidden');
+  if (typeof window._onModalClose === 'function') {
+    const cb = window._onModalClose;
+    window._onModalClose = null;
+    cb();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -385,7 +404,7 @@ function formatCurrency(amount) {
   return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Auto-boot on load
+// Auto-boot on load — bootApp() is defined in auth.js and handles first-run detection
 document.addEventListener('DOMContentLoaded', () => {
-  APP.init();
+  bootApp();
 });

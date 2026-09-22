@@ -1,72 +1,40 @@
 import os
+import shutil
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 from database import engine, Base, SessionLocal
-from auth import get_password_hash
 import models
 
 # Import all routers
 from routers import auth, medicines, stock, sales, doctors, patients, appointments, dashboard, reports, settings
 
 
-def seed_initial_data():
-    """Create default admin user and sample store settings if DB is fresh."""
-    db = SessionLocal()
-    try:
-        admin = db.query(models.User).filter(models.User.username == "admin").first()
-        if not admin:
-            db.add(models.User(
-                username="admin",
-                full_name="Administrator",
-                email="admin@medicare.local",
-                password_hash=get_password_hash("admin123"),
-                role=models.UserRole.admin,
-            ))
-            db.add(models.User(
-                username="pharmacist",
-                full_name="Pharmacy Staff",
-                email="staff@medicare.local",
-                password_hash=get_password_hash("pharma123"),
-                role=models.UserRole.pharmacist,
-            ))
-        # Default store settings
-        defaults = {
-            "store_name": "MediCare Pharmacy",
-            "currency_symbol": "₹",
-            "low_stock_days": "90",
-            "expiry_alert_days": "90",
-        }
-        for key, val in defaults.items():
-            existing = db.query(models.StoreSetting).filter(models.StoreSetting.key == key).first()
-            if not existing:
-                db.add(models.StoreSetting(key=key, value=val))
-        db.commit()
-    finally:
-        db.close()
+# ─── Uploads directory ────────────────────────────────────────────────────────
+UPLOADS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create all tables
+    # Create all tables (no auto-seed — first-run wizard handles setup)
     Base.metadata.create_all(bind=engine)
-    seed_initial_data()
     yield
 
 
 app = FastAPI(
-    title="MediCare Pro API",
-    description="Pharmacy Management System API",
-    version="1.0.0",
+    title="Medify API",
+    description="Pharmacy Management Platform by Medify",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # In production, restrict to your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,10 +55,14 @@ app.include_router(settings.router)
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "service": "MediCare Pro API"}
+    return {"status": "ok", "service": "Medify API", "version": "2.0.0"}
 
 
-# ─── Serve frontend static files (for combined deployment) ──────────────────
+# ─── Serve uploaded files (logos, etc.) ──────────────────────────────────────
+if os.path.exists(UPLOADS_DIR):
+    app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
+
+# ─── Serve frontend static files (combined deployment) ───────────────────────
 FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
 if os.path.exists(FRONTEND_DIR):
     app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="static")
