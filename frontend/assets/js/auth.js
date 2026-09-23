@@ -66,18 +66,25 @@ async function bootApp() {
     APP.init();
     return;
   }
-  // Check if first-run wizard needed
+  // Always show login first — Register button handles first-run wizard
+  showLogin();
+}
+
+// Called only when user explicitly clicks "Register a New Store"
+async function handleRegisterClick() {
   try {
     const { is_first_run } = await API.setupStatus();
     if (is_first_run) {
       showSetupWizard();
     } else {
-      showLogin();
+      showToast('This platform already has a registered store. Please log in.', 'warning');
     }
   } catch {
-    showLogin();
+    showSetupWizard(); // fallback
   }
 }
+window.handleRegisterClick = handleRegisterClick;
+
 
 function showLogin() {
   document.getElementById('setup-screen').classList.add('hidden');
