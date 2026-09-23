@@ -2,7 +2,7 @@
    api.js — Centralized API client
 ═══════════════════════════════════════════════════════════ */
 
-const API_BASE = window.API_BASE_URL || 'http://localhost:8000';
+const API_BASE = window.API_BASE_URL || '';
 
 const API = {
   async request(method, path, body = null, raw = false) {
@@ -16,7 +16,7 @@ const API = {
       body: body ? JSON.stringify(body) : null,
     });
 
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/api/auth/login') {
       AUTH.logout();
       return null;
     }
@@ -28,7 +28,7 @@ const API = {
     try { data = JSON.parse(text); } catch { data = text; }
 
     if (!res.ok) {
-      const msg = data?.detail || data?.message || `Error ${res.status}`;
+      const msg = data?.detail || data?.message || (res.status === 401 ? 'Invalid username or password' : `Error ${res.status}`);
       throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
     return data;
@@ -41,7 +41,7 @@ const API = {
   raw:    (method, path, body) => API.request(method, path, body, true),
 
   // Auth
-  setupStatus: ()    => fetch('/api/auth/setup-status').then(r => r.json()),
+  setupStatus: ()    => fetch(`${API_BASE}/api/auth/setup-status`).then(r => r.json()),
   setup:   (data)    => API.post('/api/auth/setup', data),
   login:   (data)    => API.post('/api/auth/login', data),
   getMe:   ()        => API.get('/api/auth/me'),

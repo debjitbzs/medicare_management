@@ -18,21 +18,28 @@ const AUTH = {
 
   async login(username, password) {
     const data = await API.login({ username, password });
+    if (!data || !data.access_token) {
+      throw new Error('Invalid username or password');
+    }
     this._saveSession(data);
     return data;
   },
 
   async setup(payload) {
     const data = await API.setup(payload);
+    if (!data || !data.access_token) {
+      throw new Error('Store setup completed, but login session could not be established');
+    }
     this._saveSession(data);
     return data;
   },
 
   _saveSession(data) {
+    if (!data) return;
     this.token = data.access_token;
     this.user  = data.user;
-    localStorage.setItem('medify_token', this.token);
-    localStorage.setItem('medify_user', JSON.stringify(this.user));
+    if (this.token) localStorage.setItem('medify_token', this.token);
+    if (this.user) localStorage.setItem('medify_user', JSON.stringify(this.user));
   },
 
   logout() {
