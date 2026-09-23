@@ -1,9 +1,15 @@
 services:
   - type: web
-    name: medify-pharmacy
+    name: medicare-management
     runtime: python
     buildCommand: pip install -r backend/requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.8
+      - key: DATABASE_URL
+        value: sqlite:////data/medicare.db
+    disk:
+      name: medify-data
+      mountPath: /data
+      sizeGB: 1
