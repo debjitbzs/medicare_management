@@ -29,7 +29,9 @@ DEFAULT_SETTINGS = {
     "fast2sms_api_key": "",
     "auto_sms_bill": "true",
     "auto_sms_appointment": "true",
+    "gemini_api_key": "",         # For AI Invoice Scanner
 }
+
 
 
 @router.get("")

@@ -122,6 +122,21 @@ const API = {
   testSMS:    (data) => API.post('/api/settings/test-sms', data),
   sendBillSMS: (billId) => API.post(`/api/sales/${billId}/send-sms`),
   sendApptSMS: (apptId) => API.post(`/api/appointments/${apptId}/send-sms`),
+
+  // Invoice Scanner (AI)
+  scanInvoice: (formData) => {
+    const token = localStorage.getItem('medify_token');
+    return fetch('/api/invoice/scan', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
+    }).then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+      return data;
+    });
+  },
+  importInvoiceItems: (items) => API.post('/api/invoice/import', items),
 };
 
 // Helper: download CSV with auth token

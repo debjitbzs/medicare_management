@@ -8,8 +8,5 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.8
       - key: DATABASE_URL
-        value: sqlite:////data/medicare.db
-    disk:
-      name: medify-data
-      mountPath: /data
-      sizeGB: 1
+        sync: false   # Set this manually in Render dashboard to your Supabase URL
+        # Format: postgresql://user:password@host:5432/dbname

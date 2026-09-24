@@ -26,6 +26,9 @@ async function renderSettings(tab = 'shop') {
       <button class="tab-btn ${currentSettingsTab === 'users' ? 'active' : ''}" onclick="switchSettingsTab('users')">
         <i data-lucide="users" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px"></i> Users & Staff Passwords
       </button>
+      <button class="tab-btn ${currentSettingsTab === 'ai' ? 'active' : ''}" onclick="switchSettingsTab('ai')">
+        <i data-lucide="sparkles" style="width: 15px; height: 15px; vertical-align: middle; margin-right: 6px"></i> AI Scanner
+      </button>
     </div>
 
     <!-- Tab 1: Medicine Shop Profile -->
@@ -231,10 +234,58 @@ async function renderSettings(tab = 'shop') {
         </div>
       </div>
     </div>
+
+    <!-- Tab 4: AI Invoice Scanner Settings -->
+    <div id="tab-ai-panel" class="${currentSettingsTab === 'ai' ? '' : 'hidden'}" style="max-width: 850px">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i data-lucide="sparkles" style="margin-right: 8px"></i> AI Invoice Scanner — Gemini API</span>
+          <span class="badge badge-accent">Free Tier Available</span>
+        </div>
+        <div style="padding: 16px 0">
+          <div style="background: rgba(79,70,229,0.08); border: 1px solid rgba(79,70,229,0.25); border-radius: 10px; padding: 14px 16px; margin-bottom: 20px">
+            <h4 style="margin: 0 0 6px; font-size: 14px">📸 How AI Invoice Scanning Works:</h4>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin: 0; line-height: 1.6">
+              Take a photo of your supplier's bill → our AI reads every medicine, batch number, quantity, price, HSN code, and expiry automatically. You review and edit the list, then click <strong>Import All</strong> — medicines and stock are added in seconds!
+            </p>
+            <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted)">
+              💡 Uses <strong>Google Gemini 1.5 Flash</strong> (free up to 1,500 requests/day).
+              Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color: var(--primary-light); text-decoration: underline">aistudio.google.com</a> → click <em>Get API Key</em>.
+            </div>
+          </div>
+
+          <form id="ai-settings-form" onsubmit="saveAiSettings(event)">
+            <div class="form-group" style="margin-bottom: 16px">
+              <label style="font-weight: 600">Gemini API Key</label>
+              <div style="display: flex; gap: 10px">
+                <input type="password" id="set-gemini-key" class="form-control"
+                  placeholder="AIzaSy... (paste your Gemini API key)" autocomplete="off" />
+                <button type="button" class="btn btn-outline btn-sm" style="white-space:nowrap"
+                  onclick="document.getElementById('set-gemini-key').type = document.getElementById('set-gemini-key').type === 'password' ? 'text' : 'password'">
+                  👁 Show
+                </button>
+              </div>
+              <small style="color: var(--text-muted); font-size: 11px; display: block; margin-top: 4px">
+                This key is stored securely in your database and used only for invoice scanning.
+              </small>
+            </div>
+
+            <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px">
+              <button type="button" class="btn btn-secondary" onclick="APP.navigate('invoice_scanner')">
+                <i data-lucide="scan-line"></i> Open AI Scanner
+              </button>
+              <button type="submit" class="btn btn-primary" id="save-ai-btn">
+                <i data-lucide="save"></i> Save API Key
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   `;
 
   lucide.createIcons();
-  if (currentSettingsTab === 'shop' || currentSettingsTab === 'sms') {
+  if (currentSettingsTab === 'shop' || currentSettingsTab === 'sms' || currentSettingsTab === 'ai') {
     await loadSettingsData();
   } else {
     await loadUsersTable();
@@ -243,18 +294,33 @@ async function renderSettings(tab = 'shop') {
 
 function switchSettingsTab(tab) {
   currentSettingsTab = tab;
+  const tabs = ['shop', 'sms', 'users', 'ai'];
   document.querySelectorAll('.tabs .tab-btn').forEach((btn, idx) => {
-    btn.classList.toggle('active', (idx === 0 && tab === 'shop') || (idx === 1 && tab === 'sms') || (idx === 2 && tab === 'users'));
+    btn.classList.toggle('active', tabs[idx] === tab);
   });
-  const shopP = document.getElementById('tab-shop-panel');
-  const smsP  = document.getElementById('tab-sms-panel');
-  const userP = document.getElementById('tab-users-panel');
-  if (shopP) shopP.classList.toggle('hidden', tab !== 'shop');
-  if (smsP)  smsP.classList.toggle('hidden', tab !== 'sms');
-  if (userP) userP.classList.toggle('hidden', tab !== 'users');
-
-  if (tab === 'shop' || tab === 'sms') loadSettingsData();
+  const panels = { shop: 'tab-shop-panel', sms: 'tab-sms-panel', users: 'tab-users-panel', ai: 'tab-ai-panel' };
+  Object.entries(panels).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', key !== tab);
+  });
+  if (tab === 'shop' || tab === 'sms' || tab === 'ai') loadSettingsData();
   if (tab === 'users') loadUsersTable();
+}
+
+async function saveAiSettings(event) {
+  event.preventDefault();
+  const key = (document.getElementById('set-gemini-key')?.value || '').trim();
+  const btn = document.getElementById('save-ai-btn');
+  if (btn) btn.disabled = true;
+  try {
+    await API.updateSettings({ gemini_api_key: key });
+    showToast('✅ Gemini API key saved!', 'success');
+    if (window._storeSettings) window._storeSettings.gemini_api_key = key;
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function renderUsers() {
@@ -281,6 +347,7 @@ async function loadSettingsData() {
     setVal('set-expiry-days', s.expiry_alert_days || '90');
     setVal('set-fast2sms-key', s.fast2sms_api_key || '');
     setVal('set-android-gateway-url', s.android_gateway_url || '');
+    setVal('set-gemini-key', s.gemini_api_key || '');
 
     const isAndroid = (s.sms_provider || 'fast2sms') === 'android';
     const radAndroid = document.getElementById('provider-android');

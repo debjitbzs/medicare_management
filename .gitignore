@@ -29,3 +29,8 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# Environment / secrets — NEVER commit these
+.env
+.env.*
+backend/.env

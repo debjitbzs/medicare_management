@@ -1,6 +1,13 @@
 import os
 import shutil
 from fastapi import FastAPI
+
+# Load .env file for local development (ignored in production where env vars are set directly)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # loads backend/.env if it exists
+except ImportError:
+    pass  # python-dotenv not installed, env vars must be set externally
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -9,7 +16,7 @@ from database import engine, Base, SessionLocal
 import models
 
 # Import all routers
-from routers import auth, medicines, stock, sales, doctors, patients, appointments, dashboard, reports, settings
+from routers import auth, medicines, stock, sales, doctors, patients, appointments, dashboard, reports, settings, invoice_scanner
 
 
 # ─── Uploads directory ────────────────────────────────────────────────────────
@@ -51,6 +58,7 @@ app.include_router(appointments.router)
 app.include_router(dashboard.router)
 app.include_router(reports.router)
 app.include_router(settings.router)
+app.include_router(invoice_scanner.router)
 
 
 @app.get("/api/health")

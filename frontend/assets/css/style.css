@@ -1145,3 +1145,83 @@ tbody tr:hover { background: rgba(255,255,255,0.03); }
   .setup-wizard-panel { padding: 28px 20px; }
 }
 
+/* ═══════════════════════════════════════════════════════
+   AI Invoice Scanner Styles
+═══════════════════════════════════════════════════════════ */
+.nav-item .nav-badge-new {
+  margin-left: auto;
+  background: linear-gradient(135deg, #4f46e5, #06b6d4);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+.scanner-key-banner {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.4);
+  border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 20px;
+  font-size: 13px; color: var(--warning-light);
+}
+.scanner-key-banner i { width: 18px; height: 18px; flex-shrink: 0; }
+.scanner-key-inline { display: flex; gap: 8px; flex: 1; min-width: 260px; }
+.scanner-key-inline input { flex: 1; padding: 7px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-size: 12px; }
+
+.scanner-upload-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
+
+.scanner-drop-zone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px; text-align: center;
+  border: 2px dashed var(--border); border-radius: var(--radius-lg); margin: 16px;
+  transition: all 0.2s; cursor: pointer;
+}
+.scanner-drop-zone.drag-over { border-color: var(--primary-light); background: rgba(79,70,229,0.08); }
+.scanner-drop-icon { width: 72px; height: 72px; background: linear-gradient(135deg,rgba(79,70,229,0.2),rgba(6,182,212,0.2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 2px solid rgba(99,102,241,0.3); }
+.scanner-drop-icon i { width: 36px; height: 36px; color: var(--primary-light); }
+.scanner-drop-zone h3 { font-size: 18px; margin: 0 0 6px; color: var(--text-primary); }
+.scanner-drop-zone p { font-size: 13px; color: var(--text-muted); margin: 0 0 20px; }
+.scanner-hint { font-size: 11px; color: var(--text-muted); margin-top: 12px !important; }
+.scanner-btn-group { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.camera-container { position: relative; background: #000; border-radius: var(--radius-lg); margin: 16px; overflow: hidden; max-height: 500px; }
+.camera-container video { width: 100%; max-height: 420px; object-fit: cover; display: block; }
+.camera-controls { display: flex; gap: 12px; justify-content: center; padding: 14px; background: rgba(0,0,0,0.7); }
+
+.invoice-preview { padding: 16px; }
+.invoice-preview img { width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--radius-md); border: 1px solid var(--border); background: #000; }
+.invoice-preview-actions { display: flex; gap: 12px; margin-top: 14px; justify-content: center; }
+
+.scanner-results-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.scanner-legend { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+.scanned-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.scanned-table th { background: var(--bg-surface); color: var(--text-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.scanned-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; }
+.row-new-medicine { background: rgba(16,185,129,0.04); }
+.row-existing-medicine { background: rgba(79,70,229,0.03); }
+.scanned-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+.scan-input { background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; color: var(--text-primary); padding: 5px 8px; font-size: 12px; width: 100%; transition: border-color 0.15s; }
+.scan-input:focus { outline: none; border-color: var(--primary-light); }
+.scan-input-name { font-weight: 600; margin-bottom: 4px; }
+.scan-input-generic { font-size: 11px; color: var(--text-muted); }
+.scan-input-sm { min-width: 90px; }
+.scan-input-xs { min-width: 60px; max-width: 80px; }
+.scan-select { background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; color: var(--text-primary); padding: 5px 6px; font-size: 12px; width: 100%; }
+
+.badge-new { background: rgba(16,185,129,0.15); color: var(--success-light); border: 1px solid rgba(16,185,129,0.3); font-size: 10px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+.badge-existing { background: rgba(79,70,229,0.15); color: var(--primary-light); border: 1px solid rgba(79,70,229,0.3); font-size: 10px; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+
+.import-success-card { text-align: center; padding: 48px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); animation: fadeInUp 0.4s ease; }
+.import-success-icon { width: 72px; height: 72px; background: linear-gradient(135deg,rgba(16,185,129,0.25),rgba(6,182,212,0.15)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 2px solid rgba(16,185,129,0.4); }
+.import-success-icon i { width: 36px; height: 36px; color: var(--success-light); }
+.import-success-card h3 { font-size: 22px; margin: 0 0 24px; }
+.import-stats { display: flex; gap: 32px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+.import-stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.import-stat-value { font-size: 36px; font-weight: 800; color: var(--primary-light); line-height: 1; }
+.import-stat-label { font-size: 12px; color: var(--text-muted); }
+.import-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }

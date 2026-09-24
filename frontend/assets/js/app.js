@@ -14,6 +14,7 @@ const ROUTES = {
   reports:      { title: 'Reports & Analytics',   render: () => typeof renderReports === 'function' && renderReports() },
   users:        { title: 'Users & Staff Passwords', render: () => typeof renderUsers === 'function' && renderUsers() },
   settings:     { title: 'Medicine Shop Settings', render: () => typeof renderSettings === 'function' && renderSettings() },
+  invoice_scanner: { title: 'AI Invoice Scanner',  render: () => typeof renderInvoiceScanner === 'function' && renderInvoiceScanner() },
 };
 
 let currentPage = 'dashboard';
