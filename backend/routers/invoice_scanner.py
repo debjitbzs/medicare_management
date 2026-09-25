@@ -87,7 +87,7 @@ Important rules:
         }
     }
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
     data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
 
@@ -98,7 +98,7 @@ Important rules:
         err_body = e.read().decode("utf-8")
         # Try fallback model
         if e.code == 404:
-            url2 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+            url2 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
             req2 = urllib.request.Request(url2, data=data, headers={"Content-Type": "application/json"})
             try:
                 with urllib.request.urlopen(req2, timeout=60) as response2:
