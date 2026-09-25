@@ -87,9 +87,23 @@ Important rules:
         }
     }
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
+    # AQ. prefix = new OAuth2 project key → use Bearer token in header
+    # AIza prefix = classic API key → use ?key= query param
+    def _build_request(model: str, body: bytes) -> urllib.request.Request:
+        if api_key.startswith("AQ."):
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            }
+        else:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            headers = {"Content-Type": "application/json"}
+        return urllib.request.Request(url, data=body, headers=headers)
+
     data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+    primary_model = "gemini-2.5-flash"
+    req = _build_request(primary_model, data)
 
     try:
         with urllib.request.urlopen(req, timeout=60) as response:
@@ -98,12 +112,11 @@ Important rules:
         err_body = e.read().decode("utf-8")
         # Fallback cascade: try alternative models on 404 or 503
         if e.code in (404, 503):
-            fallback_models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"]
+            fallback_models = ["gemini-2.0-flash", "gemini-1.5-flash-latest"]
             result = None
             last_err = f"Gemini API error ({e.code}): {err_body[:300]}"
             for fb_model in fallback_models:
-                fb_url = f"https://generativelanguage.googleapis.com/v1beta/models/{fb_model}:generateContent?key={api_key}"
-                fb_req = urllib.request.Request(fb_url, data=data, headers={"Content-Type": "application/json"})
+                fb_req = _build_request(fb_model, data)
                 try:
                     with urllib.request.urlopen(fb_req, timeout=60) as fb_resp:
                         result = json.loads(fb_resp.read().decode("utf-8"))
