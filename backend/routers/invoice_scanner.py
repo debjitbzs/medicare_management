@@ -96,16 +96,24 @@ Important rules:
             result = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8")
-        # Try fallback model
-        if e.code == 404:
-            url2 = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={api_key}"
-            req2 = urllib.request.Request(url2, data=data, headers={"Content-Type": "application/json"})
-            try:
-                with urllib.request.urlopen(req2, timeout=60) as response2:
-                    result = json.loads(response2.read().decode("utf-8"))
-            except urllib.error.HTTPError as e2:
-                err_body2 = e2.read().decode("utf-8")
-                raise HTTPException(status_code=400, detail=f"Gemini API error ({e2.code}): {err_body2[:300]}")
+        # Fallback cascade: try alternative models on 404 or 503
+        if e.code in (404, 503):
+            fallback_models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"]
+            result = None
+            last_err = f"Gemini API error ({e.code}): {err_body[:300]}"
+            for fb_model in fallback_models:
+                fb_url = f"https://generativelanguage.googleapis.com/v1beta/models/{fb_model}:generateContent?key={api_key}"
+                fb_req = urllib.request.Request(fb_url, data=data, headers={"Content-Type": "application/json"})
+                try:
+                    with urllib.request.urlopen(fb_req, timeout=60) as fb_resp:
+                        result = json.loads(fb_resp.read().decode("utf-8"))
+                    break  # success — stop trying
+                except urllib.error.HTTPError as fb_e:
+                    last_err = f"Gemini API error ({fb_e.code}): {fb_e.read().decode('utf-8')[:200]}"
+                except Exception as fb_ex:
+                    last_err = str(fb_ex)
+            if result is None:
+                raise HTTPException(status_code=503, detail=f"All Gemini models unavailable. Last error: {last_err}")
         else:
             raise HTTPException(status_code=400, detail=f"Gemini API error ({e.code}): {err_body[:300]}")
 
